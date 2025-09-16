@@ -6,28 +6,40 @@ const router = express.Router();
 router.post('/ingest', async (req, res) => {
   try {
     const { source } = req.body;
-    const { newsIngestionService, logger } = req.app.locals;
-
-    logger.info('Starting news ingestion', { source: source || 'all' });
-
-    let result;
-    if (source) {
-      result = await newsIngestionService.ingestSingleSource(source);
-    } else {
-      result = await newsIngestionService.ingestAllSources();
-    }
-
-    logger.info('News ingestion completed', result);
-
+    const result = source 
+      ? await req.app.locals.newsIngestionService.ingestSingleSource(source)
+      : await req.app.locals.newsIngestionService.ingestAllSources();
+    
     res.json({
       success: true,
-      result
+      message: 'News ingestion completed successfully',
+      data: result
     });
-
   } catch (error) {
-    req.app.locals.logger.error('News ingestion error:', error);
+    req.app.locals.logger.error('News ingestion failed:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to ingest news',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/admin/ingest-enhanced - Trigger enhanced news ingestion with deduplication
+router.post('/ingest-enhanced', async (req, res) => {
+  try {
+    const result = await req.app.locals.newsIngestionService.ingestWithDeduplication();
+    
+    res.json({
+      success: true,
+      message: 'Enhanced news ingestion completed successfully',
+      data: result
+    });
+  } catch (error) {
+    req.app.locals.logger.error('Enhanced news ingestion failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to ingest news with enhanced features',
       message: error.message
     });
   }
@@ -140,4 +152,4 @@ router.post('/test-scrape', async (req, res) => {
   }
 });
 
-export { router as adminRoutes };
+export default router;

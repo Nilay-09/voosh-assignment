@@ -86,4 +86,4 @@ router.post('/gemini', async (req, res) => {
   }
 });
 
-export { router as testRoutes };
+export default router;

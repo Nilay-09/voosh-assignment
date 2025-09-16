@@ -199,4 +199,4 @@ router.get('/sessions', async (req, res) => {
   }
 });
 
-export { router as chatRoutes };
+export default router;

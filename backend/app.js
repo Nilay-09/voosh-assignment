@@ -123,7 +123,6 @@ async function initializeServices() {
 
     // Setup Socket.IO handlers after services are initialized
     setupSocketHandlers(io, { redisService, ragService, logger: applicationLogger });
-    applicationLogger.info('Socket.IO handlers setup complete');
 
   } catch (error) {
     applicationLogger.error('Failed to initialize services:', error);

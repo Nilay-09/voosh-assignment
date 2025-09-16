@@ -9,14 +9,20 @@ export function setupSocketHandlers(io, { redisService, ragService, logger }) {
       try {
         const { sessionId } = data;
         
+        logger.info('Attempting to join session', { socketId: socket.id, sessionId });
+        
         if (!sessionId) {
+          logger.error('No session ID provided');
           socket.emit('error', { message: 'Session ID is required' });
           return;
         }
 
         // Get or create session
         let session = await redisService.getSession(sessionId);
+        logger.info('Session lookup result', { sessionId, sessionExists: !!session });
+        
         if (!session) {
+          logger.info('Creating new session for socket join', { sessionId });
           session = await redisService.createSession(sessionId, {
             socketId: socket.id,
             connectedAt: new Date().toISOString()
@@ -27,7 +33,7 @@ export function setupSocketHandlers(io, { redisService, ragService, logger }) {
         socket.join(sessionId);
         socket.sessionId = sessionId;
 
-        logger.info('Socket joined session', { socketId: socket.id, sessionId });
+        logger.info('Socket successfully joined session', { socketId: socket.id, sessionId });
 
         // Send session info and chat history
         const chatHistory = await redisService.getChatHistory(sessionId, 20);
@@ -46,7 +52,7 @@ export function setupSocketHandlers(io, { redisService, ragService, logger }) {
 
       } catch (error) {
         logger.error('Join session error:', error);
-        socket.emit('error', { message: 'Failed to join session' });
+        socket.emit('error', { message: `Failed to join session: ${error.message}` });
       }
     });
 
